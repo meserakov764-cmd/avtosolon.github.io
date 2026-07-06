@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Детали автомобиля</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #05050A;
+            color: #F0F0F0;
+        }
+        .angel-bg {
+            background: radial-gradient(circle at 20% 30%, #0a0a0f, #030307, #000000);
+            min-height: 100vh;
+        }
+        .angel-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+        
+        .car-detail-card {
+            background: #0E0E14;
+            border-radius: 28px;
+            overflow: hidden;
+            border: 1px solid rgba(212, 175, 55, 0.2);
+            padding: 40px;
+            margin: 30px 0 40px;
+        }
+        .car-detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+        }
+        .car-detail-image {
+            width: 100%;
+            height: 400px;
+            background-size: cover;
+            background-position: center;
+            border-radius: 20px;
+            border: 1px solid rgba(212, 175, 55, 0.3);
+        }
+        .car-detail-info h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #FFFFFF 0%, #D4AF37 70%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .brand-tag {
+            display: inline-block;
+            background: rgba(212, 175, 55, 0.15);
+            padding: 4px 16px;
+            border-radius: 30px;
+            color: #D4AF37;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
+        .detail-specs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 25px 0;
+        }
+        .spec-item {
+            background: #18181F;
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid #26262E;
+        }
+        .spec-item .label {
+            color: #aaa;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .spec-item .value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-top: 5px;
+            color: #D4AF37;
+        }
+        .price-big {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #D4AF37;
+            margin: 25px 0;
+        }
+        
+        #loadingMessage {
+            text-align: center;
+            padding: 40px;
+        }
+        #loadingMessage i {
+            font-size: 2rem;
+            color: #D4AF37;
+        }
+        
+        @media (max-width: 768px) {
+            .car-detail-grid {
+                grid-template-columns: 1fr;
+            }
+            .car-detail-image {
+                height: 250px;
+            }
+            .detail-specs {
+                grid-template-columns: 1fr;
+            }
+            .car-detail-info h1 {
+                font-size: 1.8rem;
+            }
+            .price-big {
+                font-size: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body class="angel-bg">
+<div class="angel-container">
+    
+    <div class="car-detail-card">
+        <div id="loadingMessage">
+            <i class="fas fa-spinner fa-spin"></i>
+            <p style="margin-top:20px;">Загрузка информации...</p>
+        </div>
+        
+        <div id="carContent" style="display:none;">
+            <div class="car-detail-grid">
+                <div id="carImage" class="car-detail-image"></div>
+                
+                <div class="car-detail-info">
+                    <h1 id="carName"></h1>
+                    <div id="carBrand" class="brand-tag"></div>
+                    
+                    <div class="detail-specs">
+                        <div class="spec-item">
+                            <div class="label">Год выпуска</div>
+                            <div class="value" id="carYear"></div>
+                        </div>
+                        <div class="spec-item">
+                            <div class="label">Мощность</div>
+                            <div class="value" id="carHp"></div>
+                        </div>
+                        <div class="spec-item">
+                            <div class="label">Двигатель</div>
+                            <div class="value" id="carEngine"></div>
+                        </div>
+                        <div class="spec-item">
+                            <div class="label">Привод</div>
+                            <div class="value" id="carDrive">полный</div>
+                        </div>
+                        <div class="spec-item">
+                            <div class="label">Разгон 0-100 км/ч</div>
+                            <div class="value" id="carAcceleration">-</div>
+                        </div>
+                        <div class="spec-item">
+                            <div class="label">Максимальная скорость</div>
+                            <div class="value" id="carMaxSpeed">-</div>
+                        </div>
+                    </div>
+                    
+                    <div class="price-big" id="carPrice"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // БАЗА ДАННЫХ АВТОМОБИЛЕЙ
+    const carsDatabase = [
+        { 
+            id: 1, 
+            name: "Ferrari F8 Tributo", 
+            brand: "Ferrari", 
+            year: 2023, 
+            hp: 720, 
+            priceNum: 32500000, 
+            priceStr: "32 500 000 ₽", 
+            engine: "3.9L V8", 
+            img: "1.jpg",
+            description: "",
+            acceleration: "2.9 с",
+            maxSpeed: "340 км/ч",
+            bodyType: "Купе",
+            seats: 2,
+            fuelConsumption: "12.5 л/100км",
+            trunk: "200 л"
+        },
+        { 
+            id: 2, 
+            name: "Porsche 911 Turbo S", 
+            brand: "Porsche", 
+            year: 2023, 
+            hp: 650, 
+            priceNum: 24200000, 
+            priceStr: "24 200 000 ₽", 
+            engine: "3.8L H6", 
+            img: "2.jpg",
+            description: "",
+            acceleration: "2.7 с",
+            maxSpeed: "330 км/ч",
+            bodyType: "Купе",
+            seats: 4,
+            fuelConsumption: "11.5 л/100км",
+            trunk: "350 л"
+        },
+        { 
+            id: 3, 
+            name: "Aston Martin DBS", 
+            brand: "Aston Martin", 
+            year: 2022, 
+            hp: 715, 
+            priceNum: 35000000, 
+            priceStr: "35 000 000 ₽", 
+            engine: "5.2L V12", 
+            img: "3.jpg",
+            description: "",
+            acceleration: "3.4 с",
+            maxSpeed: "340 км/ч",
+            bodyType: "Гранд-турер",
+            seats: 4,
+            fuelConsumption: "13.5 л/100км",
+            trunk: "250 л"
+        },
+        { 
+            id: 4, 
+            name: "McLaren 720S", 
+            brand: "McLaren", 
+            year: 2023, 
+            hp: 720, 
+            priceNum: 33900000, 
+            priceStr: "33 900 000 ₽", 
+            engine: "4.0L V8", 
+            img: "4.jpg",
+            description: "",
+            acceleration: "2.9 с",
+            maxSpeed: "341 км/ч",
+            bodyType: "Купе",
+            seats: 2,
+            fuelConsumption: "12.2 л/100км",
+            trunk: "150 л"
+        },
+        { 
+            id: 5, 
+            name: "Mercedes-AMG GT63 S", 
+            brand: "Mercedes", 
+            year: 2023, 
+            hp: 639, 
+            priceNum: 21500000, 
+            priceStr: "21 500 000 ₽", 
+            engine: "4.0L V8", 
+            img: "5.jpg",
+            description: "",
+            acceleration: "3.2 с",
+            maxSpeed: "315 км/ч",
+            bodyType: "4-дверное купе",
+            seats: 4,
+            fuelConsumption: "11.8 л/100км",
+            trunk: "400 л"
+        },
+        { 
+            id: 6, 
+            name: "BMW M8 Competition", 
+            brand: "BMW", 
+            year: 2023, 
+            hp: 625, 
+            priceNum: 18990000, 
+            priceStr: "18 990 000 ₽", 
+            engine: "4.4L V8", 
+            img: "6.jpg",
+            description: "",
+            acceleration: "3.2 с",
+            maxSpeed: "305 км/ч",
+            bodyType: "Купе",
+            seats: 4,
+            fuelConsumption: "11.5 л/100км",
+            trunk: "350 л"
+        },
+        { 
+            id: 7, 
+            name: "Audi R8 V10", 
+            brand: "Audi", 
+            year: 2022, 
+            hp: 620, 
+            priceNum: 22750000, 
+            priceStr: "22 750 000 ₽", 
+            engine: "5.2L V10", 
+            img: "7.jpg",
+            description: "",
+            acceleration: "3.2 с",
+            maxSpeed: "330 км/ч",
+            bodyType: "Купе",
+            seats: 2,
+            fuelConsumption: "13.5 л/100км",
+            trunk: "250 л"
+        },
+        { 
+            id: 8, 
+            name: "Nissan GT-R R35", 
+            brand: "Nissan", 
+            year: 2023, 
+            hp: 565, 
+            priceNum: 14200000, 
+            priceStr: "14 200 000 ₽", 
+            engine: "3.8L V6", 
+            img: "8.jpg",
+            description: "",
+            acceleration: "2.8 с",
+            maxSpeed: "315 км/ч",
+            bodyType: "Купе",
+            seats: 4,
+            fuelConsumption: "12.8 л/100км",
+            trunk: "250 л"
+        },
+        { 
+            id: 9, 
+            name: "Chevrolet Corvette Z06", 
+            brand: "Chevrolet", 
+            year: 2023, 
+            hp: 670, 
+            priceNum: 16800000, 
+            priceStr: "16 800 000 ₽", 
+            engine: "5.5L V8", 
+            img: "9.jpg",
+            description: "",
+            acceleration: "2.6 с",
+            maxSpeed: "315 км/ч",
+            bodyType: "Купе",
+            seats: 2,
+            fuelConsumption: "13.2 л/100км",
+            trunk: "180 л"
+        },
+        { 
+            id: 10, 
+            name: "Bentley Continental GT Speed", 
+            brand: "Bentley", 
+            year: 2022, 
+            hp: 650, 
+            priceNum: 31300000, 
+            priceStr: "31 300 000 ₽", 
+            engine: "6.0L W12", 
+            img: "10.jpg",
+            description: "",
+            acceleration: "3.5 с",
+            maxSpeed: "335 км/ч",
+            bodyType: "Купе",
+            seats: 4,
+            fuelConsumption: "14.5 л/100км",
+            trunk: "280 л"
+        },
+        { 
+            id: 11, 
+            name: "Lamborghini Urus", 
+            brand: "Lamborghini", 
+            year: 2023, 
+            hp: 666, 
+            priceNum: 27500000, 
+            priceStr: "27 500 000 ₽", 
+            engine: "4.0L V8", 
+            img: "11.jpg",
+            description: "",
+            acceleration: "3.6 с",
+            maxSpeed: "305 км/ч",
+            bodyType: "Внедорожник",
+            seats: 5,
+            fuelConsumption: "12.8 л/100км",
+            trunk: "600 л"
+        },
+        { 
+            id: 12, 
+            name: "Porsche Taycan Turbo S", 
+            brand: "Porsche", 
+            year: 2023, 
+            hp: 761, 
+            priceNum: 19850000, 
+            priceStr: "19 850 000 ₽", 
+            engine: "Электро", 
+            img: "12.jpg",
+            description: "",
+            acceleration: "2.8 с",
+            maxSpeed: "260 км/ч",
+            bodyType: "Седан",
+            seats: 4,
+            fuelConsumption: "Электро",
+            trunk: "450 л"
+        },
+        { 
+            id: 13, 
+            name: "Maserati MC20", 
+            brand: "Maserati", 
+            year: 2023, 
+            hp: 630, 
+            priceNum: 26400000, 
+            priceStr: "26 400 000 ₽", 
+            engine: "3.0L V6", 
+            img: "13.jpg",
+            description: "",
+            acceleration: "2.9 с",
+            maxSpeed: "325 км/ч",
+            bodyType: "Купе",
+            seats: 2,
+            fuelConsumption: "12.0 л/100км",
+            trunk: "200 л"
+        },
+        { 
+            id: 14, 
+            name: "Rolls-Royce Ghost", 
+            brand: "Rolls-Royce", 
+            year: 2022, 
+            hp: 563, 
+            priceNum: 48500000, 
+            priceStr: "48 500 000 ₽", 
+            engine: "6.75L V12", 
+            img: "14.jpg",
+            description: "",
+            acceleration: "4.6 с",
+            maxSpeed: "250 км/ч",
+            bodyType: "Седан",
+            seats: 5,
+            fuelConsumption: "15.0 л/100км",
+            trunk: "500 л"
+        },
+        { 
+            id: 15, 
+            name: "Nissan Skyline GT-R R34", 
+            brand: "Nissan", 
+            year: 1999, 
+            hp: 502, 
+            priceNum: 18500000, 
+            priceStr: "18 500 000 ₽", 
+            engine: "2.6L I12", 
+            img: "15.jpg",
+            description: "",
+            acceleration: "4.5 с",
+            maxSpeed: "280 км/ч",
+            bodyType: "Купе",
+            seats: 4,
+            fuelConsumption: "14.0 л/100км",
+            trunk: "200 л"
+        },
+        { 
+            id: 16, 
+            name: "BMW M3 Competition", 
+            brand: "BMW", 
+            year: 2023, 
+            hp: 510, 
+            priceNum: 16100000, 
+            priceStr: "16 100 000 ₽", 
+            engine: "3.0L I6", 
+            img: "16.jpg",
+            description: "",
+            acceleration: "3.9 с",
+            maxSpeed: "290 км/ч",
+            bodyType: "Седан",
+            seats: 5,
+            fuelConsumption: "10.8 л/100км",
+            trunk: "450 л"
+        }
+    ];
+
+    function getCarIdFromUrl() {
+        const params = new URLSearchParams(window.location.search);
+        return parseInt(params.get('id'));
+    }
+
+    function loadCarDetail() {
+        const carId = getCarIdFromUrl();
+        if (!carId) {
+            document.getElementById('loadingMessage').innerHTML = `
+                <i class="fas fa-exclamation-circle" style="color: #D4AF37; font-size: 3rem;"></i>
+                <p style="margin-top:20px; color: #D4AF37;">❌ Автомобиль не найден</p>
+            `;
+            return;
+        }
+        
+        const car = carsDatabase.find(c => c.id === carId);
+        
+        if (!car) {
+            document.getElementById('loadingMessage').innerHTML = `
+                <i class="fas fa-exclamation-circle" style="color: #D4AF37; font-size: 3rem;"></i>
+                <p style="margin-top:20px; color: #D4AF37;">❌ Автомобиль не найден</p>
+            `;
+            return;
+        }
+        
+        displayCarDetails(car);
+    }
+
+    function displayCarDetails(car) {
+        document.getElementById('loadingMessage').style.display = 'none';
+        document.getElementById('carContent').style.display = 'block';
+        
+        document.getElementById('carName').textContent = car.name;
+        document.getElementById('carBrand').textContent = `🏷️ ${car.brand}`;
+        document.getElementById('carYear').textContent = car.year;
+        document.getElementById('carHp').textContent = `${car.hp} л.с.`;
+        document.getElementById('carEngine').textContent = car.engine;
+        document.getElementById('carPrice').textContent = car.priceStr;
+        document.getElementById('carImage').style.backgroundImage = `url('${car.img}')`;
+        
+        document.getElementById('carAcceleration').textContent = car.acceleration || '-';
+        document.getElementById('carMaxSpeed').textContent = car.maxSpeed || '-';
+        
+        document.title = `${car.name} | ПРИМИАЛЬНЫЙ АВТОСОЛОН`;
+    }
+
+    loadCarDetail();
+</script>
+</body>
+</html>
